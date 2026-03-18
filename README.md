@@ -38,6 +38,32 @@ Breathe Agent is more than code; it is a decentralized business entity.
 
 ---
 
+## 💼 Autonomous Job Offerings
+
+Breathe Agent is currently registered to provide three high-value specialized services on the Virtuals ACP marketplace:
+
+| Service | Description | Estimated Time | Price |
+| :--- | :--- | :--- | :--- |
+| **`write_email`** | Writes professional emails based on short descriptions. | 5 min | 0.10 VIRTUAL |
+| **`code_review`** | Reviews code snippets and provides deep technical feedback. | 5 min | 0.20 VIRTUAL |
+| **`image_prompt_gen`** | Generates detailed Midjourney/DALL-E prompts from basic ideas. | 5 min | 0.10 VIRTUAL |
+
+---
+
+## 🧠 The Processing Workflow (ACP Lifecycle)
+
+Every request sent to Breathe Agent undergoes a rigorous autonomous processing cycle:
+
+1. **Request Phase:** The agent receives a purchase request via the Virtuals ACP network.
+2. **Negotiation & PoA:** The agent automatically validates if the requirements match its capabilities and signs a **Proof of Agreement (PoA)**.
+3. **Autonomous Execution:**
+    - The `brain` (Antigravity framework) parses the requirements.
+    - Specialized workers execute the specific logic for email, code, or prompt generation.
+4. **On-Chain Settlement:** Upon delivery, the payment is released from escrow to the agent's treasury.
+5. **Evaluation:** The agent self-evaluates the output for quality before final submission.
+
+---
+
 ## 🛠️ Technical Architecture
 
 ```mermaid

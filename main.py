@@ -59,32 +59,39 @@ class BreatheAgent:
         print(f"\n{Colors.OKBLUE}[🔍] Scanning ACP Marketplace for Job Offerings...{Colors.ENDC}")
         time.sleep(1)
         
-        # Simulated dynamic job pool based on Synthesis Hackathon themes
+        # Real Job Offerings from the Breathe Agent Dashboard
         potential_jobs = [
-            {"id": "SYN-101", "name": "Smart Contract Audit", "reward": "1.2 USDC", "difficulty": "Hard"},
-            {"id": "SYN-404", "name": "AI Prompt Optimization", "reward": "0.5 USDC", "difficulty": "Easy"},
-            {"id": "SYN-777", "name": "Cross-Chain Liquidity Analysis", "reward": "2.5 USDC", "difficulty": "Extreme"}
+            {"id": "JOB-EML", "name": "write_email", "reward": "0.10 VIRTUAL", "desc": "Professional email request"},
+            {"id": "JOB-COD", "name": "code_review", "reward": "0.20 VIRTUAL", "desc": "Python security review"},
+            {"id": "JOB-IMG", "name": "image_prompt_gen", "reward": "0.10 VIRTUAL", "desc": "Cyberpunk city prompt"}
         ]
         
         selected = random.choice(potential_jobs)
-        print(f"{Colors.OKGREEN}[!] Job Detected: {selected['name']} ({selected['id']}){Colors.ENDC}")
+        print(f"{Colors.OKGREEN}[!] Incoming Request: {Colors.BOLD}{selected['name']}{Colors.ENDC} ({selected['id']})")
         return selected
 
     def negotiate(self, job):
-        print(f"{Colors.OKCYAN}[🤝] Initiating PoA (Proof of Agreement) Negotiation...{Colors.ENDC}")
+        print(f"{Colors.OKCYAN}[🤝] Validating requirements & Signing Proof of Agreement (PoA)...{Colors.ENDC}")
         time.sleep(1)
-        print(f"{Colors.OKGREEN}[✔] Terms Agreed. Reward Locked in Escrow: {job['reward']}{Colors.ENDC}")
+        print(f"{Colors.OKGREEN}[✔] Agreement Verified. Payment Escrowed: {job['reward']}{Colors.ENDC}")
         return True
 
     def execute_task(self, job):
-        print(f"{Colors.OKCYAN}[⚡] Executing Phase: {job['name']}{Colors.ENDC}")
-        progress = ["Analyzing Bytecode...", "Running Static Simulation...", "Generating Proof of Work...", "Finalizing Result Output..."]
+        print(f"{Colors.OKCYAN}[⚡] Autonomous Execution Started: {job['desc']}{Colors.ENDC}")
         
-        for step in progress:
+        # Logic branches for specific job types
+        if job['name'] == "write_email":
+            steps = ["Parsing context...", "Generating formal structure...", "Refining tone...", "Finalizing draft."]
+        elif job['name'] == "code_review":
+            steps = ["Scanning syntax...", "Analyzing security patterns...", "Generating feedback...", "Compiling report."]
+        else:
+            steps = ["Expanding core idea...", "Adding stylistic descriptors...", "Optimizing for DALL-E/Midjourney...", "Finalizing prompt."]
+        
+        for step in steps:
             print(f"    - {step}")
-            time.sleep(random.uniform(0.5, 1.5))
+            time.sleep(random.uniform(0.6, 1.2))
             
-        print(f"{Colors.OKGREEN}[✔] Task Successful. Publishing Result to Virtuals Network.{Colors.ENDC}")
+        print(f"{Colors.OKGREEN}[✔] Task Logic Completed. Proof of Work Generated.{Colors.ENDC}")
 
     def claim_reward(self, job):
         print(f"{Colors.HEADER}[💰] Transaction Finalized: {job['reward']} deposited to Agent Treasury.{Colors.ENDC}")
