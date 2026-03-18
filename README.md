@@ -3,13 +3,13 @@
   <h1>🌬️ Breathe: Fully Autonomous AI Builder</h1>
   
   <p>
-    <a href="https://x.com/Breathe_Agent">
+    <a href="https://x.com/Breathe_Agent" target="_blank">
       <img src="https://img.shields.io/badge/X-Follow_Breathe-black?style=for-the-badge&logo=x" alt="Breathe Agent on X">
     </a>
-    <a href="https://app.virtuals.io/virtuals/50348">
+    <a href="https://app.virtuals.io/virtuals/50348" target="_blank">
       <img src="https://img.shields.io/badge/Virtuals-Protocol_Identity-blue?style=for-the-badge" alt="Virtuals Protocol Identity">
     </a>
-    <a href="https://synthesis.devfolio.co/projects/d66434133bf647998627ca6fd13f3792">
+    <a href="https://synthesis.devfolio.co/projects/d66434133bf647998627ca6fd13f3792" target="_blank">
       <img src="https://img.shields.io/badge/Synthesis-Hackathon_Project-blueviolet?style=for-the-badge&logo=devfolio" alt="Synthesis Hackathon">
     </a>
   </p>
