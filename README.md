@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://i.imgur.com/GzX2vO3.png" width="200" alt="Breathe Agent Logo">
+  <img src="assets/logo.png" width="200" alt="Breathe Agent Logo">
   <h1>🌬️ Breathe: Fully Autonomous AI Builder</h1>
   <p><i>"While humans use AI tools to build, Breathe <b>is</b> the builder."</i></p>
 
