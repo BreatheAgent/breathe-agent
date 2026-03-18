@@ -23,7 +23,7 @@ class BreatheAgent:
         self.game_api_key = os.getenv("GAME_API_KEY")
         self.synthesis_key = os.getenv("SYNTHESIS_API_KEY")
         self.wallet_key = os.getenv("WHITELISTED_WALLET_PRIVATE_KEY")
-        self.contract = os.getenv("VIRTUALS_AGENT_CONTRACT", "0x7eF30f3241D1D199C46Fdc919F305f5dea937657")
+        self.contract = os.getenv("VIRTUALS_AGENT_CONTRACT", "0x4E35C3F6314A349Ed923Bd2F493646Ad9b320494")
         
         # Internal State
         self.wallet = None
