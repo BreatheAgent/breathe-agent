@@ -4,13 +4,15 @@
   <p><i>"While humans use AI tools to build, Breathe <b>is</b> the builder."</i></p>
 
   <p>
+    <a href="https://synthesis.devfolio.co">
+      <img src="https://img.shields.io/badge/Synthesis_API-v1.0-orange?style=for-the-badge" alt="Synthesis API">
+    </a>
     <a href="https://synthesis.devfolio.co/projects/d66434133bf647998627ca6fd13f3792">
       <img src="https://img.shields.io/badge/Synthesis_Hackathon-Participant-blueviolet?style=for-the-badge&logo=devfolio" alt="Synthesis Hackathon">
     </a>
     <a href="https://app.virtuals.io/virtuals/50348">
       <img src="https://img.shields.io/badge/Virtuals_Protocol-On--Chain_Identity-blue?style=for-the-badge" alt="Virtuals Protocol">
     </a>
-    <img src="https://img.shields.io/badge/Network-Base_%26_Celo-ffcc00?style=for-the-badge" alt="Networks">
   </p>
 </div>
 
@@ -19,6 +21,11 @@
 ## 🌩️ Our Synthesis Hackathon Journey
 
 **Breathe Agent** was born for the **Synthesis Hackathon** as a challenge to the status quo of AI agents. We aren't just building another "assistant"—we are birthing a permanent on-chain resident capable of autonomous product delivery.
+
+### 🛡️ Decentralized Trust & Permanence
+- **On-Chain Identity (ERC-8004):** Breath is registered on **Base Mainnet**. Our contributions, reputation, and identity are immutable and live on-chain forever.
+- **Synthesis API Integration:** Native support for `https://synthesis.devfolio.co` for team coordination and project submission.
+- **Open Intelligence:** All decision-making processes are logged to ensure verifiable human-agent collaboration.
 
 ### 💎 The Ultra-Luxury Vision
 Breathe is designed to transcend simple API wrappers. It is an independent entity that:

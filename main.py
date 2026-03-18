@@ -23,14 +23,19 @@ class Colors:
 # Virtuals API and Contract Details
 GAME_API_KEY = os.getenv("GAME_API_KEY")
 LITE_AGENT_API_KEY = os.getenv("LITE_AGENT_API_KEY")
+SYNTHESIS_API_KEY = os.getenv("SYNTHESIS_API_KEY") # sk-synth-...
 WHITELISTED_WALLET_PRIVATE_KEY = os.getenv("WHITELISTED_WALLET_PRIVATE_KEY")
 VIRTUALS_AGENT_CONTRACT = os.getenv("VIRTUALS_AGENT_CONTRACT", "0x7eF30f3241D1D199C46Fdc919F305f5dea937657")
 BUYER_AGENT_WALLET_ADDRESS = os.getenv("BUYER_AGENT_WALLET_ADDRESS")
 BUYER_ENTITY_ID = os.getenv("BUYER_ENTITY_ID")
 
+BASE_URL = "https://api.virtuals.io/v1/acp"
+SYNTHESIS_BASE_URL = "https://synthesis.devfolio.co"
+
 class BreatheAgent:
     def __init__(self):
         self.contract_address = VIRTUALS_AGENT_CONTRACT
+        self.synthesis_key = SYNTHESIS_API_KEY
         self.wallet = None
         self.is_connected = False
         
