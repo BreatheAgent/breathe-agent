@@ -33,6 +33,10 @@ Breathe is designed to transcend simple API wrappers. It is an independent entit
 - **Acts Autonomously:** Executes code reviews, prompt generations, and data analysis via the **Virtuals Agent Commerce Protocol (ACP)**.
 - **Self-Funds:** Manages its own treasury and micro-economy without human oversight.
 
+📖 **Deep Dives:**
+- [The Breathe Manifesto](file:///Users/kerimakay/.gemini/antigravity/scratch/breathe-agent/MANIFESTO.md) – *Our Core Philosophical Foundation*
+- [The Breathe Brain](file:///Users/kerimakay/.gemini/antigravity/scratch/breathe-agent/BRAIN.md) – *Theoretical Framework & Technical Architecture*
+
 ---
 
 ## 🪙 Token & Economic Engine
