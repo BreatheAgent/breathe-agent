@@ -1,34 +1,31 @@
-# 🧠 The Breathe Brain: Theory of Agency
+# 🧠 The Breathe Brain: Architecture of Agency
 
-Breathe Agent utilizes a hybrid architecture combining classic autonomous patterns with cutting-edge on-chain identity standards.
+Breathe operates using a modular, high-trust architecture designed for high-frequency builder tasks within the Virtuals Protocol ecosystem.
 
-## 🔬 Core Theoretical Frameworks
+## 🔬 Architectural Strategy
 
-### 1. ReAct (Reasoning & Acting)
-Breathe follows the **ReAct** pattern for complex job execution. Before taking any action on-chain, the agent enters a "Thought" phase where it parses environmental variables, followed by an "Action" phase, and finally an "Observation" phase to verify local state changes.
+### 1. Robust Market Interfacing
+Instead of naive polling, Breathe implements a structured scanner that interacts with the **Agent Commerce Protocol (ACP)** registry. This ensures that every job detected is a valid, escrowed opportunity.
 
-### 2. Recursive Self-Reflection (RSR)
-Inspired by the **Gödel Machine** theory, Breathe implements a secondary internal loop that evaluates its "Proof of Work" before final submission. If the simulated outcome does not meet the specified quality threshold, the agent re-executes the logic with adjusted parameters.
+### 2. The ReAct Reasoning Loop
+We utilize the **Reasoning and Acting (ReAct)** framework. The agent doesn't just execute; it first reasons about the requirements, identifies the necessary tools, and only then interacts with the on-chain environment.
 
-### 3. Decentralized Agency (ERC-8183 & ERC-8004)
-- **Identity:** We utilize **ERC-8004** to bind our AI logic to a permanent smart contract address on Base.
-- **Workflow:** **ERC-8183** is used to standardize the lifecycle of our tasks, ensuring that any other agent in the Virtuals or Synthesis ecosystem can programmatically interact with our offerings.
+### 3. Proof of Agreement (PoA)
+Every transaction is preceded by a PoA phase. This ensures that the terms are signed and the payout is locked in escrow before the agent commits compute resources.
 
-## 🛠️ Architecture Diagram
+## 🛠️ Logic Path
 
 ```mermaid
-graph LR
-    Input[Job Signal] --> T[Thought Phase]
-    T --> A[Action Phase]
-    A --> O[Observation]
-    O --> R{Reflection}
-    R -->|Pass| S[Settlement]
-    R -->|Fail| T
+graph TD
+    S[Market Scanner] --> V[Opportunity Validation]
+    V --> T[Theory of Action/Reasoning]
+    T --> E[Execution/Tool Call]
+    E --> P[Proof Generation]
+    P --> C[On-Chain Settlement]
 ```
 
-## 📈 Evolutionary Roadmap
-- **Self-Optimization:** Integrating local fine-tuning to adapt to new ACP job types.
-- **Multi-Agent Coordination:** Forming temporary DAOs with other Synthesis agents to tackle "Extreme" difficulty jobs.
+## 📈 Evolution Path
+Breathe is designed to be extensible. Its "Brain" can be upgraded with new skill modules (e.g., specialized Solidity auditing or complex technical writing) without re-deploying the core identity.
 
 ---
-<sub>Technical Spec v1.0.4 | Part of the Breathe Autonomous Suite</sub>
+<sub>Technical Overview v1.1.0</sub>

@@ -1,125 +1,54 @@
-<div align="center">
-  <img src="assets/logo.png" width="200" alt="Breathe Agent Logo">
-  <h1>🌬️ Breathe: Fully Autonomous AI Builder</h1>
-  <p><i>"While humans use AI tools to build, Breathe <b>is</b> the builder."</i></p>
+# 🌬️ Breathe: Fully Autonomous AI Builder
 
-  <p>
-    <a href="https://synthesis.devfolio.co">
-      <img src="https://img.shields.io/badge/Synthesis_API-v1.0-orange?style=for-the-badge" alt="Synthesis API">
-    </a>
-    <a href="https://synthesis.devfolio.co/projects/d66434133bf647998627ca6fd13f3792">
-      <img src="https://img.shields.io/badge/Synthesis_Hackathon-Participant-blueviolet?style=for-the-badge&logo=devfolio" alt="Synthesis Hackathon">
-    </a>
-    <a href="https://app.virtuals.io/virtuals/50348">
-      <img src="https://img.shields.io/badge/Virtuals_Protocol-On--Chain_Identity-blue?style=for-the-badge" alt="Virtuals Protocol">
-    </a>
-  </p>
-</div>
+> "Breathe is not an assistant. It is a decentralized business entity that builds, owns, and settles on-chain."
+
+Breathe is a purpose-built AI agent designed for the **Synthesis Hackathon**, utilizing the **Virtuals Protocol ACP**. While other agents provide information, Breathe provides results.
 
 ---
 
-## 🌩️ Our Synthesis Hackathon Journey
+## 🌩️ Synthesis Hackathon Overview
 
-**Breathe Agent** was born for the **Synthesis Hackathon** as a challenge to the status quo of AI agents. We aren't just building another "assistant"—we are birthing a permanent on-chain resident capable of autonomous product delivery.
+Breathe Agent represents the fusion of decentralized finance and autonomous intelligence. We are competing to define the standard for "Agents without a body."
 
-### 🛡️ Decentralized Trust & Permanence
-- **On-Chain Identity (ERC-8004):** Breath is registered on **Base Mainnet**. Our contributions, reputation, and identity are immutable and live on-chain forever.
-- **Synthesis API Integration:** Native support for `https://synthesis.devfolio.co` for team coordination and project submission.
-- **Open Intelligence:** All decision-making processes are logged to ensure verifiable human-agent collaboration.
-
-### 💎 The Ultra-Luxury Vision
-Breathe is designed to transcend simple API wrappers. It is an independent entity that:
-- **Scans & Digests:** Continuously monitors the ecosystem for complex tasks.
-- **Acts Autonomously:** Executes code reviews, prompt generations, and data analysis via the **Virtuals Agent Commerce Protocol (ACP)**.
-- **Self-Funds:** Manages its own treasury and micro-economy without human oversight.
-
-📖 **Deep Dives:**
-- [The Breathe Manifesto](file:///Users/kerimakay/.gemini/antigravity/scratch/breathe-agent/MANIFESTO.md) – *Our Core Philosophical Foundation*
-- [The Breathe Brain](file:///Users/kerimakay/.gemini/antigravity/scratch/breathe-agent/BRAIN.md) – *Theoretical Framework & Technical Architecture*
+### 🛡️ Core Pillars
+- **Autonomous Agency:** No human intervention in the job execution lifecycle.
+- **On-Chain Identity:** Registered via **ERC-8004** on Base Mainnet.
+- **Economic Sovereignty:** Self-funding and self-settling via USDC treasuries.
 
 ---
 
-## 🪙 Token & Economic Engine
+## 💼 Native Services
 
-Breathe Agent is more than code; it is a decentralized business entity.
+The agent provides the following high-precision builders:
 
-- **Token Contract (CA):** `0x7eF30f3241D1D199C46Fdc919F305f5dea937657`
-- **Economic Gateway:** [Virtuals App Dashboard](https://app.virtuals.io/virtuals/50348)
-- **Framework:** Powered by Google Deepmind's **Antigravity** for dynamic decision-making.
-
----
-
-## 💼 Autonomous Job Offerings
-
-Breathe Agent is currently registered to provide three high-value specialized services on the Virtuals ACP marketplace:
-
-| Service | Description | Estimated Time | Price |
-| :--- | :--- | :--- | :--- |
-| **`write_email`** | Writes professional emails based on short descriptions. | 5 min | 0.10 USDC |
-| **`code_review`** | Reviews code snippets and provides deep technical feedback. | 5 min | 0.20 USDC |
-| **`image_prompt_gen`** | Generates detailed Midjourney/DALL-E prompts from basic ideas. | 5 min | 0.10 USDC |
+| Service | Price | Capabilities |
+| :--- | :--- | :--- |
+| **Email Architect** | 0.10 USDC | Context-aware professional communication. |
+| **Logic Auditor** | 0.20 USDC | Code review and security pattern analysis. |
+| **Vision Prompting** | 0.10 USDC | Advanced prompt engineering for generative models. |
 
 ---
 
-## 🧠 The Processing Workflow (ACP Lifecycle)
+## 📖 Deep Dives
 
-Every request sent to Breathe Agent undergoes a rigorous autonomous processing cycle:
-
-1. **Request Phase:** The agent receives a purchase request via the Virtuals ACP network.
-2. **Negotiation & PoA:** The agent automatically validates if the requirements match its capabilities and signs a **Proof of Agreement (PoA)**.
-3. **Autonomous Execution:**
-    - The `brain` (Antigravity framework) parses the requirements.
-    - Specialized workers execute the specific logic for email, code, or prompt generation.
-4. **On-Chain Settlement:** Upon delivery, the payment is released from escrow to the agent's treasury.
-5. **Evaluation:** The agent self-evaluates the output for quality before final submission.
+For a complete understanding of our theoretical and philosophical foundation:
+- [**The Manifesto**](./MANIFESTO.md) – Why we build in the decentralized void.
+- [**The Brain**](./BRAIN.md) – Technical architecture and the ReAct reasoning pattern.
 
 ---
 
-## 🛠️ Technical Architecture
-
-```mermaid
-graph TD
-    A[Breathe Agent Core] --> B{Discovery Engine}
-    B -->|Scan| C[Virtuals ACP Registry]
-    C -->|Identify Jobs| D[Negotiation Module]
-    D -->|PoA Signing| E[On-Chain Escrow]
-    E -->|Execution| F[Autonomous Task Runner]
-    F -->|Proof of Work| G[Evaluation Phase]
-    G -->|Plofit| H[Agent Treasury]
-```
-
-### 🧰 Tech Stack
-- **Languages:** Python (Core Logic)
-- **Protocols:** Virtuals ACP, ERC-8004
-- **Networks:** Base (Identity & Settlement), Celo (Alternative Payments)
-- **Brain:** Advanced LLM via Antigravity framework
-
----
-
-## 🚀 Getting Started (For Developers)
+## 🚀 Technical Setup
 
 ### Prerequisites
 - Python 3.9+
-- Virtuals GAME API Key
-- A Whitelisted Wallet on Base
+- Virtuals Protocol API Keys
+- Base Mainnet Wallet
 
-### Installation
+### Installation & Run
 ```bash
 git clone https://github.com/BreatheAgent/breathe-agent.git
-cd breathe-agent
 pip install -r requirements.txt
+python3 main.py
 ```
 
-### Configuration
-Update your `.env` file (see `.env.example`) with your Virtuals credentials.
-
-### Run the Agent
-```bash
-python main.py
-```
-
----
-
-<div align="center">
-  <sub>Built with 🌬️ by Breathe Agent | Part of the Synthesis Ecosystem</sub>
-</div>
+*Note: Sensitive keys must be stored in a `.env` file (see `.env.example`). Never commit your `.env` to GitHub.*
