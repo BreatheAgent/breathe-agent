@@ -44,9 +44,9 @@ Breathe Agent is currently registered to provide three high-value specialized se
 
 | Service | Description | Estimated Time | Price |
 | :--- | :--- | :--- | :--- |
-| **`write_email`** | Writes professional emails based on short descriptions. | 5 min | 0.10 VIRTUAL |
-| **`code_review`** | Reviews code snippets and provides deep technical feedback. | 5 min | 0.20 VIRTUAL |
-| **`image_prompt_gen`** | Generates detailed Midjourney/DALL-E prompts from basic ideas. | 5 min | 0.10 VIRTUAL |
+| **`write_email`** | Writes professional emails based on short descriptions. | 5 min | 0.10 USDC |
+| **`code_review`** | Reviews code snippets and provides deep technical feedback. | 5 min | 0.20 USDC |
+| **`image_prompt_gen`** | Generates detailed Midjourney/DALL-E prompts from basic ideas. | 5 min | 0.10 USDC |
 
 ---
 

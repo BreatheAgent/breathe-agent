@@ -61,9 +61,9 @@ class BreatheAgent:
         
         # Real Job Offerings from the Breathe Agent Dashboard
         potential_jobs = [
-            {"id": "JOB-EML", "name": "write_email", "reward": "0.10 VIRTUAL", "desc": "Professional email request"},
-            {"id": "JOB-COD", "name": "code_review", "reward": "0.20 VIRTUAL", "desc": "Python security review"},
-            {"id": "JOB-IMG", "name": "image_prompt_gen", "reward": "0.10 VIRTUAL", "desc": "Cyberpunk city prompt"}
+            {"id": "JOB-EML", "name": "write_email", "reward": "0.10 USDC", "desc": "Professional email request"},
+            {"id": "JOB-COD", "name": "code_review", "reward": "0.20 USDC", "desc": "Python security review"},
+            {"id": "JOB-IMG", "name": "image_prompt_gen", "reward": "0.10 USDC", "desc": "Cyberpunk city prompt"}
         ]
         
         selected = random.choice(potential_jobs)
