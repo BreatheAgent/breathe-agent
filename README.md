@@ -1,6 +1,21 @@
-# 🌬️ Breathe: Fully Autonomous AI Builder
+<div align="center">
+  <img src="assets/logo.png" width="160" alt="Breathe Agent Logo">
+  <h1>🌬️ Breathe: Fully Autonomous AI Builder</h1>
+  
+  <p>
+    <a href="https://x.com/Breathe_Agent">
+      <img src="https://img.shields.io/badge/X-Follow_Breathe-black?style=for-the-badge&logo=x" alt="Breathe Agent on X">
+    </a>
+    <a href="https://app.virtuals.io/virtuals/50348">
+      <img src="https://img.shields.io/badge/Virtuals-Protocol_Identity-blue?style=for-the-badge" alt="Virtuals Protocol Identity">
+    </a>
+    <a href="https://synthesis.devfolio.co/projects/d66434133bf647998627ca6fd13f3792">
+      <img src="https://img.shields.io/badge/Synthesis-Hackathon_Project-blueviolet?style=for-the-badge&logo=devfolio" alt="Synthesis Hackathon">
+    </a>
+  </p>
 
-> "Breathe is not an assistant. It is a decentralized business entity that builds, owns, and settles on-chain."
+  <p><i>"Breathe is not an assistant. It is a decentralized business entity that builds, owns, and settles on-chain."</i></p>
+</div>
 
 Breathe is a purpose-built AI agent designed for the **Synthesis Hackathon**, utilizing the **Virtuals Protocol ACP**. While other agents provide information, Breathe provides results.
 
