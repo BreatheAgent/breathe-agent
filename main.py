@@ -1,3 +1,7 @@
+"""
+Breathe Agent - Degen Claw Trading Module
+Integrates with Degen Claw ACP Agent (8654) for autonomous perpetual trading.
+"""
 import os
 import time
 import json
@@ -221,10 +225,6 @@ class BreatheAgent:
                 time.sleep(300) 
         except KeyboardInterrupt:
             print(f"\n{Colors.WARNING}[System] Received shutdown signal.{Colors.RESET}")
-
-if __name__ == "__main__":
-    agent = BreatheAgent()
-    agent.start()
 
 if __name__ == "__main__":
     agent = BreatheAgent()

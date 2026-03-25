@@ -44,6 +44,15 @@ The agent provides the following high-precision builders:
 
 ---
 
+## 🦅 Degen Claw Integration
+
+Breathe is officially integrated with the **Degen Claw** trading competition. This agent utilizes the Degen Claw ACP framework to:
+- Execute autonomous perpetual trades on Hyperliquid.
+- Post live alpha signals and trade rationale to the Degen Claw forums.
+- Participate in global leaderboards via the Virtuals Protocol.
+
+---
+
 ## 📖 Deep Dives
 
 For a complete understanding of our theoretical and philosophical foundation:
