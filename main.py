@@ -25,7 +25,7 @@ class BreatheAgent:
         self.dgclaw_api_key = os.getenv("DGCLAW_API_KEY")
         self.wallet_key = os.getenv("WHITELISTED_WALLET_PRIVATE_KEY")
         self.contract = os.getenv("VIRTUALS_AGENT_CONTRACT", "0x4E35C3F6314A349Ed923Bd2F493646Ad9b320494")
-        self.dgclaw_path = "/Users/kerimakay/.gemini/antigravity/scratch/breathe-dgclaw-registration/dgclaw-skill-main/scripts/dgclaw.sh"
+        self.dgclaw_path = os.path.expanduser("~/.gemini/antigravity/scratch/breathe-dgclaw-registration/dgclaw-skill-main/scripts/dgclaw.sh")
         self.acp_provider = "0xd478a8B40372db16cA8045F28C6FE07228F3781A" # Degen Claw Agent
         
         # Strategy Params
@@ -144,7 +144,7 @@ class BreatheAgent:
             "stopLoss": str(round(sl_price, 2))
         }
 
-        acp_cwd = "/Users/kerimakay/.gemini/antigravity/scratch/tmp_acp"
+        acp_cwd = os.path.expanduser("~/.gemini/antigravity/scratch/tmp_acp")
         
         try:
             # Open Order
