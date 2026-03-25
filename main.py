@@ -1,4 +1,3 @@
-print("--- Breathe Agent System Check: Script Starting ---", flush=True)
 import os
 import time
 import json
@@ -25,7 +24,7 @@ class BreatheAgent:
         self.dgclaw_api_key = os.getenv("DGCLAW_API_KEY")
         self.wallet_key = os.getenv("WHITELISTED_WALLET_PRIVATE_KEY")
         self.contract = os.getenv("VIRTUALS_AGENT_CONTRACT", "0x4E35C3F6314A349Ed923Bd2F493646Ad9b320494")
-        self.dgclaw_path = os.path.expanduser("~/.gemini/antigravity/scratch/breathe-dgclaw-registration/dgclaw-skill-main/scripts/dgclaw.sh")
+        self.dgclaw_path = os.getenv("DGCLAW_PATH", "scripts/dgclaw.sh")
         self.acp_provider = "0xd478a8B40372db16cA8045F28C6FE07228F3781A" # Degen Claw Agent
         
         # Strategy Params
@@ -57,7 +56,7 @@ class BreatheAgent:
             print(f"{Colors.ERROR}[Error] Identity verification failed: {e}{Colors.RESET}")
 
     def get_market_data(self, pair):
-        """Fetch real-time data from Hyperliquid Info API for a specific pair."""
+        """Fetch candle data and calculate EMAs and RSI."""
         try:
             # Get Mid price
             response = requests.post("https://api.hyperliquid.xyz/info", 
@@ -65,9 +64,9 @@ class BreatheAgent:
             mids = response.json()
             current_price = float(mids.get(pair, 0))
             
-            # Get Candle Data
+            # Get Candle Data (Last 100 candles for EMA convergence)
             end_time = int(time.time() * 1000)
-            start_time = end_time - (24 * 60 * 60 * 1000)
+            start_time = end_time - (100 * 60 * 60 * 1000) # 100 hours
             
             candle_req = {
                 "type": "candleSnapshot",
@@ -81,22 +80,34 @@ class BreatheAgent:
             candle_resp = requests.post("https://api.hyperliquid.xyz/info", json=candle_req, timeout=10)
             candles = candle_resp.json()
             
-            if not candles or not isinstance(candles, list):
+            if not candles or not isinstance(candles, list) or len(candles) < 22:
                 return None
                 
-            highs = [float(c['h']) for c in candles]
-            lows = [float(c['l']) for c in candles]
             closes = [float(c['c']) for c in candles]
+            
+            ema9 = self.calculate_ema(closes, 9)
+            ema21 = self.calculate_ema(closes, 21)
+            rsi = self.calculate_rsi(closes)
             
             return {
                 "price": current_price,
-                "high_24h": max(highs),
-                "low_24h": min(lows),
-                "rsi": self.calculate_rsi(closes)
+                "ema9": ema9,
+                "ema21": ema21,
+                "rsi": rsi,
+                "history": closes # For cross detection
             }
         except Exception as e:
             print(f"{Colors.ERROR}[Market Data Error] {e}{Colors.RESET}")
             return None
+
+    def calculate_ema(self, prices, period):
+        """Calculate EMA for a given period."""
+        if not prices: return 0
+        k = 2 / (period + 1)
+        ema = prices[0]
+        for price in prices[1:]:
+            ema = (price * k) + (ema * (1 - k))
+        return ema
 
     def calculate_rsi(self, prices, period=14):
         """Simple RSI calculation."""
@@ -144,7 +155,7 @@ class BreatheAgent:
             "stopLoss": str(round(sl_price, 2))
         }
 
-        acp_cwd = os.path.expanduser("~/.gemini/antigravity/scratch/tmp_acp")
+        acp_cwd = os.getenv("ACP_CWD", "./acp")
         
         try:
             # Open Order
@@ -177,37 +188,43 @@ class BreatheAgent:
             print(f"{Colors.ERROR}[System] Critical failure: Agent not ready.{Colors.RESET}")
             return
 
-        print(f"\n{Colors.BOLD}🌬️  Breathe Agent | Aggressive Momentum Active (10x){Colors.RESET}")
+        print(f"\n{Colors.BOLD}🌬️  Breathe Agent | EMA 9/21 Trend Active (10x){Colors.RESET}")
         
-        # Initial Deposit Check (One-off or periodic)
-        # acp job create ... perp_deposit ... if needed
-
         try:
             while True:
                 for p in self.pairs:
                     data = self.get_market_data(p)
                     if data:
                         price = data['price']
-                        high_24h = data['high_24h']
-                        low_24h = data['low_24h']
+                        ema9 = data['ema9']
+                        ema21 = data['ema21']
                         rsi = data['rsi']
                         
-                        print(f"\r{Colors.INFO}[Poll] {p}: {price} | High: {high_24h} | RSI: {rsi:.2f}{Colors.RESET}       ", end="", flush=True)
+                        # Use candle history to check for the cross (previous candle vs current)
+                        history = data['history']
+                        prev_ema9 = self.calculate_ema(history[:-1], 9)
+                        prev_ema21 = self.calculate_ema(history[:-1], 21)
                         
-                        # GO LONG Logic
-                        if price >= high_24h and rsi > 60:
-                            self.execute_trade("long", p, price, "24h Breakout + RSI")
+                        print(f"\r{Colors.INFO}[Poll] {p}: {price:.2f} | EMA9: {ema9:.2f} | EMA21: {ema21:.2f}{Colors.RESET}       ", end="", flush=True)
                         
-                        # GO SHORT Logic
-                        elif price <= low_24h and rsi < 40:
-                            self.execute_trade("short", p, price, "24h Breakdown + RSI")
+                        # GOLDEN CROSS (Long)
+                        if prev_ema9 <= prev_ema21 and ema9 > ema21:
+                            self.execute_trade("long", p, price, "EMA 9 crossed above EMA 21 (Golden Cross)")
+                        
+                        # DEATH CROSS (Short)
+                        elif prev_ema9 >= prev_ema21 and ema9 < ema21:
+                            self.execute_trade("short", p, price, "EMA 9 crossed below EMA 21 (Death Cross)")
                     
                     time.sleep(10) # Small gap between pairs
                 
-                print(f"\n{Colors.INFO}[Wait] Complete scan finished. Resting 5 mins...{Colors.RESET}", flush=True)
+                print(f"\n{Colors.INFO}[Wait] Scan finished. Sleeping 5 mins...{Colors.RESET}", flush=True)
                 time.sleep(300) 
         except KeyboardInterrupt:
             print(f"\n{Colors.WARNING}[System] Received shutdown signal.{Colors.RESET}")
+
+if __name__ == "__main__":
+    agent = BreatheAgent()
+    agent.start()
 
 if __name__ == "__main__":
     agent = BreatheAgent()
