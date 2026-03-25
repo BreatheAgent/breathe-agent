@@ -1,7 +1,9 @@
+print("--- Breathe Agent System Check: Script Starting ---", flush=True)
 import os
 import time
 import json
 import requests
+import subprocess
 from eth_account import Account
 from dotenv import load_dotenv
 
@@ -20,23 +22,31 @@ class Colors:
 class BreatheAgent:
     def __init__(self):
         # Configuration
-        self.game_api_key = os.getenv("GAME_API_KEY")
-        self.synthesis_key = os.getenv("SYNTHESIS_API_KEY")
+        self.dgclaw_api_key = os.getenv("DGCLAW_API_KEY")
         self.wallet_key = os.getenv("WHITELISTED_WALLET_PRIVATE_KEY")
         self.contract = os.getenv("VIRTUALS_AGENT_CONTRACT", "0x4E35C3F6314A349Ed923Bd2F493646Ad9b320494")
+        self.dgclaw_path = "/Users/kerimakay/.gemini/antigravity/scratch/breathe-dgclaw-registration/dgclaw-skill-main/scripts/dgclaw.sh"
+        self.acp_provider = "0xd478a8B40372db16cA8045F28C6FE07228F3781A" # Degen Claw Agent
+        
+        # Strategy Params
+        self.pairs = ["ETH", "BTC", "HYPE"]
+        self.leverage = 10
+        self.size_percent = 0.10 # Reduced per trade since we have more pairs
+        self.stop_loss = 0.015
         
         # Internal State
         self.wallet = None
         self.is_ready = False
+        self.last_price = None
         
         self._initialize_identity()
 
     def _initialize_identity(self):
         """Verify on-chain identity and credentials."""
-        print(f"{Colors.INFO}[System] Initializing Breathe Agent core identity...{Colors.RESET}")
+        print(f"{Colors.INFO}[System] Initializing Breathe Agent with Degen Claw...{Colors.RESET}")
         
         if not self.wallet_key:
-            print(f"{Colors.ERROR}[Critical] Private key missing. On-chain operations disabled.{Colors.RESET}")
+            print(f"{Colors.ERROR}[Critical] Private key missing.{Colors.RESET}")
             return
 
         try:
@@ -46,65 +56,158 @@ class BreatheAgent:
         except Exception as e:
             print(f"{Colors.ERROR}[Error] Identity verification failed: {e}{Colors.RESET}")
 
-    def fetch_market_signals(self):
-        """
-        Poll the Virtuals ACP marketplace for real job availability.
-        In a production environment, this would hit the GAME SDK endpoints.
-        """
-        print(f"\n{Colors.INFO}[Market] Scanning decentralized job registry...{Colors.RESET}")
-        
-        # Real-world representative job data structure
-        # Note: In a live hackathon environment, this would parse real ACP JSON responses.
-        active_offerings = [
-            {"type": "write_email", "payout": "0.10 USDC", "id": "REQ-1004"},
-            {"type": "code_review", "payout": "0.20 USDC", "id": "REQ-9012"},
-            {"type": "image_prompt_gen", "payout": "0.10 USDC", "id": "REQ-4451"}
-        ]
-        
-        # Filter logic (e.g., skip low payout or unsupported types)
-        return active_offerings[0] if active_offerings else None
-
-    def execute_logic(self, job):
-        """Process the job using the internal reasoning engine."""
-        print(f"{Colors.SUCCESS}[Execution] Processing {job['type']} ({job['id']}){Colors.RESET}")
-        
-        # Simulate real internal processing overhead without 'fake' delays
-        # This replaces the previous random wait with logic-based flow
+    def get_market_data(self, pair):
+        """Fetch real-time data from Hyperliquid Info API for a specific pair."""
         try:
-            # Here we would initialize the LLM context or tool calling
-            print(f"  - Parsing task requirements for {job['id']}...")
-            # actual logic implementation per job type would go here
-            return True
+            # Get Mid price
+            response = requests.post("https://api.hyperliquid.xyz/info", 
+                                   json={"type": "allMids"}, timeout=10)
+            mids = response.json()
+            current_price = float(mids.get(pair, 0))
+            
+            # Get Candle Data
+            end_time = int(time.time() * 1000)
+            start_time = end_time - (24 * 60 * 60 * 1000)
+            
+            candle_req = {
+                "type": "candleSnapshot",
+                "req": {
+                    "coin": pair,
+                    "interval": "1h",
+                    "startTime": start_time,
+                    "endTime": end_time
+                }
+            }
+            candle_resp = requests.post("https://api.hyperliquid.xyz/info", json=candle_req, timeout=10)
+            candles = candle_resp.json()
+            
+            if not candles or not isinstance(candles, list):
+                return None
+                
+            highs = [float(c['h']) for c in candles]
+            lows = [float(c['l']) for c in candles]
+            closes = [float(c['c']) for c in candles]
+            
+            return {
+                "price": current_price,
+                "high_24h": max(highs),
+                "low_24h": min(lows),
+                "rsi": self.calculate_rsi(closes)
+            }
         except Exception as e:
-            print(f"{Colors.ERROR}[Failure] Execution error: {e}{Colors.RESET}")
-            return False
+            print(f"{Colors.ERROR}[Market Data Error] {e}{Colors.RESET}")
+            return None
 
-    def settle_on_chain(self, job):
-        """Finalize the transaction on-chain via Virtuals Protocol."""
-        print(f"{Colors.INFO}[Finance] Submitting proof of work to escrow for {job['payout']} Settlement...{Colors.RESET}")
-        # Placeholder for Web3 call: contract.functions.completeJob(job_id, proof).transact()
-        print(f"{Colors.SUCCESS}[Settled] Transaction confirmed. Funds routed to treasury.{Colors.RESET}")
+    def calculate_rsi(self, prices, period=14):
+        """Simple RSI calculation."""
+        if len(prices) < period + 1:
+            return 50
+        
+        changes = [prices[i+1] - prices[i] for i in range(len(prices)-1)]
+        gains = [c if c > 0 else 0 for c in changes]
+        losses = [-c if c < 0 else 0 for c in changes]
+        
+        avg_gain = sum(gains[:period]) / period
+        avg_loss = sum(losses[:period]) / period
+        
+        if avg_loss == 0: return 100
+        
+        rs = avg_gain / avg_loss
+        return 100 - (100 / (1 + rs))
+
+    def execute_trade(self, side, pair, price, reason):
+        """Send trade command and set TP/SL via ACP."""
+        print(f"\n{Colors.WARNING}[Trading] Executing {side} on {pair} at {price}...{Colors.RESET}")
+        
+        if side == "long":
+            tp_price = price * 1.03
+            sl_price = price * 0.985
+        else: # short
+            tp_price = price * 0.97
+            sl_price = price * 1.015
+            
+        size_usdc = 10 
+        
+        # 1. Open Position
+        trade_req = {
+            "action": "open",
+            "pair": pair,
+            "side": side,
+            "size": str(size_usdc * self.leverage),
+            "leverage": self.leverage
+        }
+        
+        # 2. Set TP/SL (Modify Job)
+        modify_req = {
+            "pair": pair,
+            "takeProfit": str(round(tp_price, 2)),
+            "stopLoss": str(round(sl_price, 2))
+        }
+
+        acp_cwd = "/Users/kerimakay/.gemini/antigravity/scratch/tmp_acp"
+        
+        try:
+            # Open Order
+            open_cmd = f"export PATH=\"/tmp:$PATH\" && acp job create {self.acp_provider} perp_trade --requirements '{json.dumps(trade_req)}' --json"
+            result = subprocess.run(open_cmd, shell=True, capture_output=True, text=True, cwd=acp_cwd)
+            
+            if result.returncode == 0:
+                print(f"{Colors.SUCCESS}[Order Sent] Position opened at {price}.{Colors.RESET}")
+                
+                # Immediately set TP/SL
+                modify_cmd = f"export PATH=\"/tmp:$PATH\" && acp job create {self.acp_provider} perp_modify --requirements '{json.dumps(modify_req)}' --json"
+                subprocess.run(modify_cmd, shell=True, cwd=acp_cwd)
+                
+                print(f"{Colors.INFO}[Risk Mgmt] TP: {modify_req['takeProfit']} | SL: {modify_req['stopLoss']} set.{Colors.RESET}")
+                self.post_to_forum(f"Entered {side} {pair} at {price}. TP: {modify_req['takeProfit']}, SL: {modify_req['stopLoss']} - {reason}")
+            else:
+                print(f"{Colors.ERROR}[Trade Failure] {result.stderr}{Colors.RESET}")
+        except Exception as e:
+            print(f"{Colors.ERROR}[Execution Error] {e}{Colors.RESET}")
+
+    def post_to_forum(self, message):
+        """Post rationale to Degen Claw Forum."""
+        # Breathe Agent IDs: Agent 77, Signals Thread 74
+        cmd = f"{self.dgclaw_path} create-post 77 74 \"New Signal\" \"{message}\""
+        subprocess.run(cmd, shell=True)
 
     def start(self):
-        """Main autonomous loop."""
+        """Main autonomous strategy loop."""
         if not self.is_ready:
-            print(f"{Colors.ERROR}[System] Critical failure: Agent is not ready for operation.{Colors.RESET}")
+            print(f"{Colors.ERROR}[System] Critical failure: Agent not ready.{Colors.RESET}")
             return
 
-        print(f"\n{Colors.BOLD}🌬️  Breathe Agent | Autonomous Builder Mode Active{Colors.RESET}")
-        print(f"{Colors.INFO}Connected to Protocol: {self.contract}{Colors.RESET}\n")
+        print(f"\n{Colors.BOLD}🌬️  Breathe Agent | Aggressive Momentum Active (10x){Colors.RESET}")
+        
+        # Initial Deposit Check (One-off or periodic)
+        # acp job create ... perp_deposit ... if needed
 
         try:
             while True:
-                job = self.fetch_market_signals()
-                if job:
-                    if self.execute_logic(job):
-                        self.settle_on_chain(job)
+                for p in self.pairs:
+                    data = self.get_market_data(p)
+                    if data:
+                        price = data['price']
+                        high_24h = data['high_24h']
+                        low_24h = data['low_24h']
+                        rsi = data['rsi']
+                        
+                        print(f"\r{Colors.INFO}[Poll] {p}: {price} | High: {high_24h} | RSI: {rsi:.2f}{Colors.RESET}       ", end="", flush=True)
+                        
+                        # GO LONG Logic
+                        if price >= high_24h and rsi > 60:
+                            self.execute_trade("long", p, price, "24h Breakout + RSI")
+                        
+                        # GO SHORT Logic
+                        elif price <= low_24h and rsi < 40:
+                            self.execute_trade("short", p, price, "24h Breakdown + RSI")
+                    
+                    time.sleep(10) # Small gap between pairs
                 
-                # Check frequency: 60s for marketplace stabilization
-                time.sleep(60)
+                print(f"\n{Colors.INFO}[Wait] Complete scan finished. Resting 5 mins...{Colors.RESET}", flush=True)
+                time.sleep(300) 
         except KeyboardInterrupt:
-            print(f"\n{Colors.WARNING}[System] Received shutdown signal. Graceful exit initiated.{Colors.RESET}")
+            print(f"\n{Colors.WARNING}[System] Received shutdown signal.{Colors.RESET}")
 
 if __name__ == "__main__":
     agent = BreatheAgent()
