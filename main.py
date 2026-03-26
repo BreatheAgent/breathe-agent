@@ -108,23 +108,40 @@ class BreatheAgent:
             return None
 
     def get_account_state(self):
-        """Fetch account value, active positions, and TP/SL orders."""
+        """Fetch account value and positions from the latest active subaccount."""
         try:
-            url = "https://api.hyperliquid.xyz/info"
-            subaccount = "0x39c4e869b344085a19e50ff1cf70d85baf64c72d"
+            # 1. Dynamically find the latest subaccount from ACP history
+            cmd = "acp job completed --json"
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            jobs = json.loads(result.stdout)
             
-            # 1. Fetch Clearinghouse State (Positions)
+            subaccount = None
+            for job in jobs:
+                deliverable = job.get("deliverable", {})
+                if isinstance(deliverable, dict):
+                    sa = deliverable.get("hlSubaccountAddress")
+                    if sa:
+                        subaccount = sa
+                        break
+            
+            if not subaccount:
+                # Fallback to main wallet if no subaccount found (unlikely)
+                subaccount = self.wallet.address
+
+            url = "https://api.hyperliquid.xyz/info"
+            
+            # 2. Fetch Clearinghouse State (Positions)
             resp = requests.post(url, json={"type": "clearinghouseState", "user": subaccount}, timeout=10)
             data = resp.json()
             
-            # 2. Fetch Open Orders (TP/SL)
+            # 3. Fetch Open Orders (TP/SL)
             orders_resp = requests.post(url, json={"type": "openOrders", "user": subaccount}, timeout=10)
             open_orders = orders_resp.json()
             
             tps = {o.get('coin'): o.get('triggerPx', o.get('limitPx')) for o in open_orders if o.get('orderType') == 'Take Profit' or 'tp' in str(o).lower()}
             sls = {o.get('coin'): o.get('triggerPx', o.get('limitPx')) for o in open_orders if o.get('orderType') == 'Stop Market' or 'sl' in str(o).lower()}
             
-            # 3. Process Positions
+            # 4. Process Positions
             active_positions = []
             positions = data.get("assetPositions", [])
             for pos in positions:
@@ -142,9 +159,9 @@ class BreatheAgent:
                         "sl": sls.get(coin, "-")
                     })
                     
-            return {"value": float(data.get("marginSummary", {}).get("accountValue", 0)), "positions": active_positions}
+            return {"value": float(data.get("marginSummary", {}).get("accountValue", 0)), "positions": active_positions, "addr": subaccount}
         except Exception as e:
-            return {"value": 0, "positions": []}
+            return {"value": 0, "positions": [], "addr": "unknown"}
 
     def display_live_status(self, state, current_mids):
         """Display a professional PnL dashboard in the terminal."""
