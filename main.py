@@ -118,18 +118,53 @@ class BreatheAgent:
             summary = data.get("marginSummary", {})
             account_value = float(summary.get("accountValue", 0))
             
-            # 2. Active Position Count
-            count = 0
+            # 2. Active Positions & PnL
+            active_positions = []
             positions = data.get("assetPositions", [])
             for pos in positions:
                 entry = pos.get("position", {})
                 size = float(entry.get("s", 0))
                 if abs(size) > 0:
-                    count += 1
+                    coin = entry.get("coin")
+                    entry_price = float(entry.get("entryPx", 0))
+                    leverage = float(entry.get("leverage", {}).get("value", 1))
+                    side = "LONG" if size > 0 else "SHORT"
+                    active_positions.append({
+                        "coin": coin,
+                        "side": side,
+                        "size": abs(size),
+                        "entry": entry_price,
+                        "leverage": leverage
+                    })
                     
-            return {"value": account_value, "count": count}
+            return {"value": account_value, "positions": active_positions}
         except:
-            return {"value": 0, "count": 99}
+            return {"value": 0, "positions": []}
+
+    def display_live_status(self, state, current_mids):
+        """Display a professional PnL dashboard in the terminal."""
+        positions = state.get("positions", [])
+        if not positions:
+            return
+            
+        print(f"\n{Colors.BOLD}{'='*50}{Colors.RESET}")
+        print(f"{Colors.INFO}📈 LIVE POSITIONS | Balance: ${state['value']:.2f}{Colors.RESET}")
+        print(f"{'PAIR':<10} {'SIDE':<6} {'SIZE':<10} {'ENTRY':<10} {'PNL':<10}")
+        
+        for pos in positions:
+            coin = pos['coin']
+            current_price = float(current_mids.get(coin, 0))
+            if current_price == 0: continue
+            
+            # PnL Calculation
+            pnl_pct = (current_price / pos['entry'] - 1) * (1 if pos['side'] == "LONG" else -1)
+            pnl_usd = pnl_pct * pos['size'] * pos['entry']
+            
+            color = Colors.SUCCESS if pnl_usd >= 0 else Colors.ERROR
+            pnl_str = f"{pnl_usd:+.2f} ({pnl_pct*100:+.2f}%)"
+            
+            print(f"{coin:<10} {pos['side']:<6} {pos['size']:<10.2f} {pos['entry']:<10.2f} {color}{pnl_str}{Colors.RESET}")
+        print(f"{Colors.BOLD}{'='*50}{Colors.RESET}\n")
 
     def calculate_ema(self, prices, period):
         """Calculate EMA for a given period."""
@@ -255,7 +290,11 @@ class BreatheAgent:
                         # Dynamic Scaling: Max Positions = floor(Account Value / 9 USDC margin)
                         state = self.get_account_state()
                         acc_value = state['value']
-                        active_count = state['count']
+                        active_count = len(state['positions'])
+                        
+                        # Display PnL Dashboard
+                        mid_prices = {pair: self.get_market_data(pair)['price'] for pair in self.pairs if self.get_market_data(pair)}
+                        self.display_live_status(state, mid_prices)
                         
                         max_positions = max(1, int(acc_value // 9)) # At least 1 if we have money
                         is_at_limit = active_count >= max_positions
