@@ -163,14 +163,14 @@ class BreatheAgent:
         
         try:
             # Open Order
-            open_cmd = f"export PATH=\"/tmp:$PATH\" && acp job create {self.acp_provider} perp_trade --requirements '{json.dumps(trade_req)}' --json"
+            open_cmd = f"export PATH=\"/tmp:$PATH\" && acp job create {self.acp_provider} perp_trade --requirements '{json.dumps(trade_req)}' --isAutomated true --json"
             result = subprocess.run(open_cmd, shell=True, capture_output=True, text=True, cwd=acp_cwd)
             
             if result.returncode == 0:
                 print(f"{Colors.SUCCESS}[Order Sent] Position opened at {price}.{Colors.RESET}")
                 
                 # Immediately set TP/SL
-                modify_cmd = f"export PATH=\"/tmp:$PATH\" && acp job create {self.acp_provider} perp_modify --requirements '{json.dumps(modify_req)}' --json"
+                modify_cmd = f"export PATH=\"/tmp:$PATH\" && acp job create {self.acp_provider} perp_modify --requirements '{json.dumps(modify_req)}' --isAutomated true --json"
                 subprocess.run(modify_cmd, shell=True, cwd=acp_cwd)
                 
                 print(f"{Colors.INFO}[Risk Mgmt] TP: {modify_req['takeProfit']} | SL: {modify_req['stopLoss']} set.{Colors.RESET}")
