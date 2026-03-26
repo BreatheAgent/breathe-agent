@@ -36,6 +36,7 @@ class BreatheAgent:
         self.timeframe = "15m"
         self.ema_fast = 5
         self.ema_slow = 13
+        self.last_subaccount = None # Cache for persistent monitoring
         self.leverage = 10
         self.size_percent = 0.10
         self.stop_loss = 0.015
@@ -116,7 +117,7 @@ class BreatheAgent:
             cmd = "acp job completed --json --limit 200"
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, env=env)
             
-            subaccount = None
+            subaccount = self.last_subaccount
             if result.returncode == 0:
                 jobs = json.loads(result.stdout)
                 if isinstance(jobs, list):
@@ -127,10 +128,15 @@ class BreatheAgent:
                                 sa = deliverable.get("hlSubaccountAddress")
                                 if sa:
                                     subaccount = sa
+                                    self.last_subaccount = sa # Update cache
                                     break
             
             if not subaccount:
                 subaccount = self.wallet.address
+                print(f"{Colors.WARNING}[Scan] No subaccount found in history. Monitoring main wallet.{Colors.RESET}")
+            else:
+                if subaccount != self.wallet.address:
+                    print(f"{Colors.SUCCESS}[Scan] Monitoring Subaccount: {subaccount[:10]}...{Colors.RESET}")
 
             # 2. Use curl for all-in-one webData2 info (Robust against SSL/UA issues)
             curl_cmd = [
