@@ -272,8 +272,17 @@ class BreatheAgent:
         
         try:
             while True:
+                # 1. Fetch current status first for the dashboard
+                state = self.get_account_state()
+                all_data = {p: self.get_market_data(p) for p in self.pairs}
+                mid_prices = {p: d['price'] for p, d in all_data.items() if d}
+                
+                # 2. Display PnL Dashboard immediately
+                self.display_live_status(state, mid_prices)
+                
+                # 3. Iterate pairs for trading signals
                 for p in self.pairs:
-                    data = self.get_market_data(p)
+                    data = all_data.get(p)
                     if data:
                         price = data['price']
                         ema9 = data['ema9']
@@ -288,13 +297,8 @@ class BreatheAgent:
                         print(f"\r{Colors.INFO}[Poll] {p}: {price:.2f} | EMA9: {ema9:.2f} | EMA21: {ema21:.2f}{Colors.RESET}       ", end="", flush=True)
                         
                         # Dynamic Scaling: Max Positions = floor(Account Value / 9 USDC margin)
-                        state = self.get_account_state()
                         acc_value = state['value']
                         active_count = len(state['positions'])
-                        
-                        # Display PnL Dashboard
-                        mid_prices = {pair: self.get_market_data(pair)['price'] for pair in self.pairs if self.get_market_data(pair)}
-                        self.display_live_status(state, mid_prices)
                         
                         max_positions = max(1, int(acc_value // 9)) # At least 1 if we have money
                         is_at_limit = active_count >= max_positions
@@ -309,7 +313,7 @@ class BreatheAgent:
                             lev = self.get_dynamic_leverage("short", data)
                             self.execute_trade("short", p, price, lev, f"EMA 9 Death Cross | RSI: {rsi:.1f} | Cap: {active_count}/{max_positions}")
                     
-                    time.sleep(10) # Small gap between pairs
+                    time.sleep(2) # Small gap between pairs
                 
                 print(f"\n{Colors.INFO}[Wait] Scan finished. Sleeping 5 mins...{Colors.RESET}", flush=True)
                 time.sleep(300) 
