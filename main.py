@@ -217,10 +217,10 @@ class BreatheAgent:
         
         if side == "long":
             tp_price = price * 1.01  # +1% Profit
-            sl_price = price * 0.985 # -1.5% Stop Loss
+            sl_price = price * 0.99  # -1% Stop Loss (Tightened)
         else: # short
             tp_price = price * 0.99  # +1% Profit
-            sl_price = price * 1.015 # -1.5% Stop Loss
+            sl_price = price * 1.01  # +1% Stop Loss (Tightened)
             
         size_usdc = 9 
         
