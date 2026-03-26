@@ -123,13 +123,15 @@ class BreatheAgent:
             jobs = json.loads(result.stdout)
             
             subaccount = None
-            for job in jobs:
-                deliverable = job.get("deliverable", {})
-                if isinstance(deliverable, dict):
-                    sa = deliverable.get("hlSubaccountAddress")
-                    if sa:
-                        subaccount = sa
-                        break
+            if isinstance(jobs, list):
+                for job in jobs:
+                    if isinstance(job, dict):
+                        deliverable = job.get("deliverable", {})
+                        if isinstance(deliverable, dict):
+                            sa = deliverable.get("hlSubaccountAddress")
+                            if sa:
+                                subaccount = sa
+                                break
             
             if not subaccount:
                 subaccount = self.wallet.address
