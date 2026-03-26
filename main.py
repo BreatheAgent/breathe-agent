@@ -65,9 +65,9 @@ class BreatheAgent:
     def get_market_data(self, pair):
         """Fetch candle data and calculate EMAs and RSI."""
         try:
-            # Get Mid price
+            headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
             response = requests.post("https://api.hyperliquid.xyz/info", 
-                                   json={"type": "allMids"}, timeout=10)
+                                   json={"type": "allMids"}, headers=headers, timeout=10)
             mids = response.json()
             current_price = float(mids.get(pair, 0))
             
@@ -84,7 +84,7 @@ class BreatheAgent:
                     "endTime": end_time
                 }
             }
-            candle_resp = requests.post("https://api.hyperliquid.xyz/info", json=candle_req, timeout=10)
+            candle_resp = requests.post("https://api.hyperliquid.xyz/info", json=candle_req, headers=headers, timeout=10)
             candles = candle_resp.json()
             
             if not candles or not isinstance(candles, list) or len(candles) < 22:
@@ -137,12 +137,13 @@ class BreatheAgent:
                 subaccount = self.wallet.address
 
             url = "https://api.hyperliquid.xyz/info"
-            
+            headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+
             # 2. Fetch Clearinghouse State (Margin Account)
             perp_value = 0
             data = {}
             try:
-                resp = requests.post(url, json={"type": "clearinghouseState", "user": subaccount}, timeout=10)
+                resp = requests.post(url, json={"type": "clearinghouseState", "user": subaccount}, headers=headers, timeout=10)
                 if resp.status_code == 200:
                     data = resp.json()
                     if isinstance(data, dict):
@@ -153,7 +154,7 @@ class BreatheAgent:
             # 3. Fetch L1 Token Balances (Spot Card / Cash)
             l1_value = 0
             try:
-                l1_resp = requests.post(url, json={"type": "userTokens", "user": subaccount}, timeout=10)
+                l1_resp = requests.post(url, json={"type": "userTokens", "user": subaccount}, headers=headers, timeout=10)
                 if l1_resp.status_code == 200:
                     l1_data = l1_resp.json()
                     if isinstance(l1_data, list):
@@ -168,7 +169,7 @@ class BreatheAgent:
             tps = {}
             sls = {}
             try:
-                orders_resp = requests.post(url, json={"type": "openOrders", "user": subaccount}, timeout=10)
+                orders_resp = requests.post(url, json={"type": "openOrders", "user": subaccount}, headers=headers, timeout=10)
                 if orders_resp.status_code == 200:
                     open_orders = orders_resp.json()
                     if isinstance(open_orders, list):
