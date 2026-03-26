@@ -92,14 +92,14 @@ class BreatheAgent:
                 
             closes = [float(c['c']) for c in candles]
             
-            ema9 = self.calculate_ema(closes, 9)
-            ema21 = self.calculate_ema(closes, 21)
+            ema_f = self.calculate_ema(closes, self.ema_fast)
+            ema_s = self.calculate_ema(closes, self.ema_slow)
             rsi = self.calculate_rsi(closes)
             
             return {
                 "price": current_price,
-                "ema9": ema9,
-                "ema21": ema21,
+                "ema_f": ema_f,
+                "ema_s": ema_s,
                 "rsi": rsi,
                 "history": closes # For cross detection
             }
@@ -290,8 +290,8 @@ class BreatheAgent:
                     data = all_data.get(p)
                     if data:
                         price = data['price']
-                        ema9 = data['ema9']
-                        ema21 = data['ema21']
+                        ema_f = data['ema_f']
+                        ema_s = data['ema_s']
                         rsi = data['rsi']
                         
                         # Use candle history to check for the cross (previous candle vs current)
