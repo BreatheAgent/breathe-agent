@@ -213,11 +213,11 @@ class BreatheAgent:
         print(f"\n{Colors.WARNING}[Trading] Executing {side} on {pair} at {price} ({leverage}x)...{Colors.RESET}")
         
         if side == "long":
-            tp_price = price * 1.03
-            sl_price = price * 0.985
+            tp_price = price * 1.01  # +1% Profit
+            sl_price = price * 0.985 # -1.5% Stop Loss
         else: # short
-            tp_price = price * 0.97
-            sl_price = price * 1.015
+            tp_price = price * 0.99  # +1% Profit
+            sl_price = price * 1.015 # -1.5% Stop Loss
             
         size_usdc = 9 
         
