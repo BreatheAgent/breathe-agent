@@ -169,8 +169,8 @@ class BreatheAgent:
         # 2. Set TP/SL (Modify Job)
         modify_req = {
             "pair": pair,
-            "takeProfit": str(round(tp_price, 2)),
-            "stopLoss": str(round(sl_price, 2))
+            "takeProfit": str(int(tp_price)),
+            "stopLoss": str(int(sl_price))
         }
 
         acp_cwd = os.getenv("ACP_CWD", "./acp")
