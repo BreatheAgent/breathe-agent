@@ -105,11 +105,12 @@ class BreatheAgent:
             return None
 
     def get_account_state(self):
-        """Fetch total account value and active position count."""
+        """Fetch total account value and active position count from the trading subaccount."""
         try:
             url = "https://api.hyperliquid.xyz/info"
-            user_address = self.wallet.address
-            payload = {"type": "clearinghouseState", "user": user_address}
+            # ACP uses a dedicated subaccount. We use the one found in job history.
+            subaccount = "0x39c4e869b344085a19e50ff1cf70d85baf64c72d"
+            payload = {"type": "clearinghouseState", "user": subaccount}
             
             response = requests.post(url, json=payload, timeout=10)
             data = response.json()
@@ -138,7 +139,7 @@ class BreatheAgent:
                     })
                     
             return {"value": account_value, "positions": active_positions}
-        except:
+        except Exception as e:
             return {"value": 0, "positions": []}
 
     def display_live_status(self, state, current_mids):
