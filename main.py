@@ -169,6 +169,7 @@ class BreatheAgent:
                     })
                     
             total_value = perp_value + l1_value
+            print(f"{Colors.INFO}[Debug] Address: {subaccount[:10]}... | Perp: ${perp_value:.2f} | L1: ${l1_value:.2f}{Colors.RESET}")
             return {"value": total_value, "positions": active_positions, "addr": subaccount}
         except Exception as e:
             return {"value": 0, "positions": [], "addr": "unknown"}
