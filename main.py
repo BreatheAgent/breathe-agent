@@ -145,10 +145,11 @@ class BreatheAgent:
             l1_resp = requests.post(url, json={"type": "userTokens", "user": subaccount}, timeout=10)
             l1_data = l1_resp.json()
             l1_value = 0
-            for token in l1_data:
-                if token.get('token') == 'USDC':
-                    l1_value = float(token.get('totalBalance', 0))
-                    break
+            if isinstance(l1_data, list):
+                for token in l1_data:
+                    if isinstance(token, dict) and token.get('token') == 'USDC':
+                        l1_value = float(token.get('totalBalance', 0))
+                        break
             
             # 4. Fetch Open Orders (TP/SL)
             orders_resp = requests.post(url, json={"type": "openOrders", "user": subaccount}, timeout=10)
