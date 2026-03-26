@@ -124,7 +124,7 @@ class BreatheAgent:
             positions = data.get("assetPositions", [])
             for pos in positions:
                 entry = pos.get("position", {})
-                size = float(entry.get("s", 0))
+                size = float(entry.get("szi", 0))
                 if abs(size) > 0:
                     coin = entry.get("coin")
                     entry_price = float(entry.get("entryPx", 0))
@@ -145,8 +145,6 @@ class BreatheAgent:
     def display_live_status(self, state, current_mids):
         """Display a professional PnL dashboard in the terminal."""
         positions = state.get("positions", [])
-        if not positions:
-            return
             
         print(f"\n{Colors.BOLD}{'='*50}{Colors.RESET}")
         print(f"{Colors.INFO}📈 LIVE POSITIONS | Balance: ${state['value']:.2f}{Colors.RESET}")
