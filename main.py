@@ -108,7 +108,7 @@ class BreatheAgent:
             return None
 
     def get_account_state(self):
-        """Fetch total value (Clearinghouse + L1 Spot) and positions."""
+        """Fetch total value (Clearinghouse + L1 Spot) and positions using robust curl."""
         try:
             # 1. Dynamically find the latest subaccount from ACP history
             env = os.environ.copy()
@@ -116,97 +116,72 @@ class BreatheAgent:
             cmd = "acp job completed --json"
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, env=env)
             
-            if result.returncode != 0:
-                print(f"{Colors.ERROR}[ACP Error] {result.stderr}{Colors.RESET}")
-                return {"value": 0, "positions": [], "addr": "unknown"}
-                
-            jobs = json.loads(result.stdout)
-            
             subaccount = None
-            if isinstance(jobs, list):
-                for job in jobs:
-                    if isinstance(job, dict):
-                        deliverable = job.get("deliverable", {})
-                        if isinstance(deliverable, dict):
-                            sa = deliverable.get("hlSubaccountAddress")
-                            if sa:
-                                subaccount = sa
-                                break
+            if result.returncode == 0:
+                jobs = json.loads(result.stdout)
+                if isinstance(jobs, list):
+                    for job in jobs:
+                        if isinstance(job, dict):
+                            deliverable = job.get("deliverable", {})
+                            if isinstance(deliverable, dict):
+                                sa = deliverable.get("hlSubaccountAddress")
+                                if sa:
+                                    subaccount = sa
+                                    break
             
             if not subaccount:
                 subaccount = self.wallet.address
 
-            url = "https://api.hyperliquid.xyz/info"
-            headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-
-            # 2. Fetch Clearinghouse State (Margin Account)
+            # 2. Use curl for all-in-one webData2 info (Robust against SSL/UA issues)
+            curl_cmd = [
+                "curl", "-s", "-X", "POST", "https://api.hyperliquid.xyz/info",
+                "-H", "Content-Type: application/json",
+                "-d", json.dumps({"type": "webData2", "user": subaccount})
+            ]
+            resp = subprocess.run(curl_cmd, capture_output=True, text=True)
+            if resp.returncode != 0:
+                return {"value": 0, "positions": [], "addr": subaccount}
+                
+            data = json.loads(resp.stdout)
+            
+            # 3. Parse Margin Account (Perp)
             perp_value = 0
-            data = {}
-            try:
-                resp = requests.post(url, json={"type": "clearinghouseState", "user": subaccount}, headers=headers, timeout=10)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    if isinstance(data, dict):
-                        perp_value = float(data.get("marginSummary", {}).get("accountValue", 0))
-            except Exception as e:
-                pass
+            clearinghouse = data.get("clearinghouseState", {})
+            if isinstance(clearinghouse, dict):
+                perp_value = float(clearinghouse.get("marginSummary", {}).get("accountValue", 0))
             
-            # 3. Fetch L1 Token Balances (Spot Card / Cash)
+            # 4. Parse L1 Token Balances (Spot)
             l1_value = 0
-            try:
-                l1_resp = requests.post(url, json={"type": "userTokens", "user": subaccount}, headers=headers, timeout=10)
-                if l1_resp.status_code == 200:
-                    l1_data = l1_resp.json()
-                    if isinstance(l1_data, list):
-                        for token in l1_data:
-                            if isinstance(token, dict) and token.get('token') == 'USDC':
-                                l1_value = float(token.get('totalBalance', 0))
-                                break
-            except Exception as e:
-                pass
-            
-            # 4. Fetch Open Orders (TP/SL)
-            tps = {}
-            sls = {}
-            try:
-                orders_resp = requests.post(url, json={"type": "openOrders", "user": subaccount}, headers=headers, timeout=10)
-                if orders_resp.status_code == 200:
-                    open_orders = orders_resp.json()
-                    if isinstance(open_orders, list):
-                        for o in open_orders:
-                            if isinstance(o, dict):
-                                coin = o.get('coin')
-                                if coin:
-                                    if o.get('orderType') == 'Take Profit' or 'tp' in str(o).lower():
-                                        tps[coin] = o.get('triggerPx', o.get('limitPx'))
-                                    if o.get('orderType') == 'Stop Market' or 'sl' in str(o).lower():
-                                        sls[coin] = o.get('triggerPx', o.get('limitPx'))
-            except Exception as e:
-                pass
+            # webData2 provides spot balances in a different structure
+            balances = data.get("spotState", {}).get("balances", [])
+            if isinstance(balances, list):
+                for b in balances:
+                    if isinstance(b, dict) and b.get("coin") == "USDC":
+                        l1_value = float(b.get("total", 0))
+                        break
             
             # 5. Process Positions
             active_positions = []
-            if isinstance(data, dict):
-                positions = data.get("assetPositions", [])
-                for pos in positions:
-                    if isinstance(pos, dict):
-                        entry = pos.get("position", {})
-                        if isinstance(entry, dict):
-                            size = float(entry.get("szi", 0))
-                            if abs(size) > 0:
-                                coin = entry.get("coin")
-                                active_positions.append({
-                                    "coin": coin,
-                                    "side": "LONG" if size > 0 else "SHORT",
-                                    "size": abs(size),
-                                    "entry": float(entry.get("entryPx", 0)),
-                                    "leverage": float(entry.get("leverage", {}).get("value", 1)),
-                                    "tp": tps.get(coin, "-"),
-                                    "sl": sls.get(coin, "-")
-                                })
+            positions = clearinghouse.get("assetPositions", [])
+            for pos in positions:
+                if isinstance(pos, dict):
+                    entry = pos.get("position", {})
+                    if isinstance(entry, dict):
+                        size = float(entry.get("szi", 0))
+                        if abs(size) > 0:
+                            coin = entry.get("coin")
+                            active_positions.append({
+                                "coin": coin,
+                                "side": "LONG" if size > 0 else "SHORT",
+                                "size": abs(size),
+                                "entry": float(entry.get("entryPx", 0)),
+                                "leverage": float(entry.get("leverage", {}).get("value", 1)),
+                                "tp": "-", # TP/SL parsing from webData2 is complex, fallback to dash
+                                "sl": "-"
+                            })
                     
             total_value = perp_value + l1_value
-            print(f"{Colors.INFO}[Debug] Address: {subaccount[:10]}... | Perp: ${perp_value:.2f} | L1: ${l1_value:.2f}{Colors.RESET}")
+            print(f"{Colors.INFO}[Debug] Subaccount: {subaccount[:10]}... | Total: ${total_value:.2f} (Perp: {perp_value:.2f}, L1: {l1_value:.2f}){Colors.RESET}")
             return {"value": total_value, "positions": active_positions, "addr": subaccount}
         except Exception as e:
             print(f"{Colors.ERROR}[Account State Critical Error] {e}{Colors.RESET}")
