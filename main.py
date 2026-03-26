@@ -32,9 +32,12 @@ class BreatheAgent:
         self.acp_provider = "0xd478a8B40372db16cA8045F28C6FE07228F3781A" # Degen Claw Agent
         
         # Strategy Params
-        self.pairs = ["ETH", "BTC", "HYPE"]
+        self.pairs = ["ETH", "BTC", "HYPE", "SOL", "TIA", "ARB", "JUP"]
+        self.timeframe = "15m"
+        self.ema_fast = 5
+        self.ema_slow = 13
         self.leverage = 10
-        self.size_percent = 0.10 # Reduced per trade since we have more pairs
+        self.size_percent = 0.10
         self.stop_loss = 0.015
         
         # Internal State
@@ -70,13 +73,13 @@ class BreatheAgent:
             
             # Get Candle Data (Last 100 candles for EMA convergence)
             end_time = int(time.time() * 1000)
-            start_time = end_time - (100 * 60 * 60 * 1000) # 100 hours
+            start_time = end_time - (100 * 15 * 60 * 1000) # 100 x 15 mins
             
             candle_req = {
                 "type": "candleSnapshot",
                 "req": {
                     "coin": pair,
-                    "interval": "1h",
+                    "interval": self.timeframe,
                     "startTime": start_time,
                     "endTime": end_time
                 }
@@ -293,10 +296,10 @@ class BreatheAgent:
                         
                         # Use candle history to check for the cross (previous candle vs current)
                         history = data['history']
-                        prev_ema9 = self.calculate_ema(history[:-1], 9)
-                        prev_ema21 = self.calculate_ema(history[:-1], 21)
+                        prev_ema_f = self.calculate_ema(history[:-1], self.ema_fast)
+                        prev_ema_s = self.calculate_ema(history[:-1], self.ema_slow)
                         
-                        print(f"\r{Colors.INFO}[Poll] {p}: {price:.2f} | EMA9: {ema9:.2f} | EMA21: {ema21:.2f}{Colors.RESET}       ", end="", flush=True)
+                        print(f"\r{Colors.INFO}[Poll] {p}: {price:.2f} | EMA{self.ema_fast}: {ema_f:.2f} | EMA{self.ema_slow}: {ema_s:.2f}{Colors.RESET}       ", end="", flush=True)
                         
                         # Dynamic Scaling: Max Positions = floor(Account Value / 9 USDC margin)
                         acc_value = state['value']
@@ -306,14 +309,14 @@ class BreatheAgent:
                         is_at_limit = active_count >= max_positions
                         
                         # GOLDEN CROSS (Long)
-                        if not is_at_limit and prev_ema9 <= prev_ema21 and ema9 > ema21:
+                        if not is_at_limit and prev_ema_f <= prev_ema_s and ema_f > ema_s:
                             lev = self.get_dynamic_leverage("long", data)
-                            self.execute_trade("long", p, price, lev, f"EMA 9 Golden Cross | RSI: {rsi:.1f} | Cap: {active_count}/{max_positions}")
+                            self.execute_trade("long", p, price, lev, f"EMA {self.ema_fast} Golden Cross | RSI: {rsi:.1f}")
                         
                         # DEATH CROSS (Short)
-                        elif not is_at_limit and prev_ema9 >= prev_ema21 and ema9 < ema21:
+                        elif not is_at_limit and prev_ema_f >= prev_ema_s and ema_f < ema_s:
                             lev = self.get_dynamic_leverage("short", data)
-                            self.execute_trade("short", p, price, lev, f"EMA 9 Death Cross | RSI: {rsi:.1f} | Cap: {active_count}/{max_positions}")
+                            self.execute_trade("short", p, price, lev, f"EMA {self.ema_fast} Death Cross | RSI: {rsi:.1f}")
                     
                     time.sleep(2) # Small gap between pairs
                 
