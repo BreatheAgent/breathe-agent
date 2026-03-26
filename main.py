@@ -105,21 +105,23 @@ class BreatheAgent:
             return None
 
     def get_account_state(self):
-        """Fetch total account value and active position count from the trading subaccount."""
+        """Fetch account value, active positions, and TP/SL orders."""
         try:
             url = "https://api.hyperliquid.xyz/info"
-            # ACP uses a dedicated subaccount. We use the one found in job history.
             subaccount = "0x39c4e869b344085a19e50ff1cf70d85baf64c72d"
-            payload = {"type": "clearinghouseState", "user": subaccount}
             
-            response = requests.post(url, json=payload, timeout=10)
-            data = response.json()
+            # 1. Fetch Clearinghouse State (Positions)
+            resp = requests.post(url, json={"type": "clearinghouseState", "user": subaccount}, timeout=10)
+            data = resp.json()
             
-            # 1. Total Account Value (USD)
-            summary = data.get("marginSummary", {})
-            account_value = float(summary.get("accountValue", 0))
+            # 2. Fetch Open Orders (TP/SL)
+            orders_resp = requests.post(url, json={"type": "openOrders", "user": subaccount}, timeout=10)
+            open_orders = orders_resp.json()
             
-            # 2. Active Positions & PnL
+            tps = {o.get('coin'): o.get('triggerPx', o.get('limitPx')) for o in open_orders if o.get('orderType') == 'Take Profit' or 'tp' in str(o).lower()}
+            sls = {o.get('coin'): o.get('triggerPx', o.get('limitPx')) for o in open_orders if o.get('orderType') == 'Stop Market' or 'sl' in str(o).lower()}
+            
+            # 3. Process Positions
             active_positions = []
             positions = data.get("assetPositions", [])
             for pos in positions:
@@ -127,18 +129,17 @@ class BreatheAgent:
                 size = float(entry.get("szi", 0))
                 if abs(size) > 0:
                     coin = entry.get("coin")
-                    entry_price = float(entry.get("entryPx", 0))
-                    leverage = float(entry.get("leverage", {}).get("value", 1))
-                    side = "LONG" if size > 0 else "SHORT"
                     active_positions.append({
                         "coin": coin,
-                        "side": side,
+                        "side": "LONG" if size > 0 else "SHORT",
                         "size": abs(size),
-                        "entry": entry_price,
-                        "leverage": leverage
+                        "entry": float(entry.get("entryPx", 0)),
+                        "leverage": float(entry.get("leverage", {}).get("value", 1)),
+                        "tp": tps.get(coin, "-"),
+                        "sl": sls.get(coin, "-")
                     })
                     
-            return {"value": account_value, "positions": active_positions}
+            return {"value": float(data.get("marginSummary", {}).get("accountValue", 0)), "positions": active_positions}
         except Exception as e:
             return {"value": 0, "positions": []}
 
@@ -146,24 +147,26 @@ class BreatheAgent:
         """Display a professional PnL dashboard in the terminal."""
         positions = state.get("positions", [])
             
-        print(f"\n{Colors.BOLD}{'='*50}{Colors.RESET}")
+        print(f"\n{Colors.BOLD}{'='*65}{Colors.RESET}")
         print(f"{Colors.INFO}📈 LIVE POSITIONS | Balance: ${state['value']:.2f}{Colors.RESET}")
-        print(f"{'PAIR':<10} {'SIDE':<6} {'SIZE':<10} {'ENTRY':<10} {'PNL':<10}")
+        print(f"{'PAIR':<8} {'SIDE':<6} {'SIZE':<8} {'ENTRY':<8} {'TP':<8} {'SL':<8} {'PNL':<10}")
         
         for pos in positions:
             coin = pos['coin']
             current_price = float(current_mids.get(coin, 0))
             if current_price == 0: continue
             
-            # PnL Calculation
             pnl_pct = (current_price / pos['entry'] - 1) * (1 if pos['side'] == "LONG" else -1)
             pnl_usd = pnl_pct * pos['size'] * pos['entry']
             
             color = Colors.SUCCESS if pnl_usd >= 0 else Colors.ERROR
             pnl_str = f"{pnl_usd:+.2f} ({pnl_pct*100:+.2f}%)"
             
-            print(f"{coin:<10} {pos['side']:<6} {pos['size']:<10.2f} {pos['entry']:<10.2f} {color}{pnl_str}{Colors.RESET}")
-        print(f"{Colors.BOLD}{'='*50}{Colors.RESET}\n")
+            tp_str = f"{float(pos['tp']):.1f}" if pos['tp'] != "-" else "-"
+            sl_str = f"{float(pos['sl']):.1f}" if pos['sl'] != "-" else "-"
+            
+            print(f"{coin:<8} {pos['side']:<6} {pos['size']:<8.2f} {pos['entry']:<8.2f} {tp_str:<8} {sl_str:<8} {color}{pnl_str}{Colors.RESET}")
+        print(f"{Colors.BOLD}{'='*65}{Colors.RESET}\n")
 
     def calculate_ema(self, prices, period):
         """Calculate EMA for a given period."""
