@@ -113,7 +113,7 @@ class BreatheAgent:
             # 1. Dynamically find the latest subaccount from ACP history
             env = os.environ.copy()
             env["PATH"] = "/tmp:" + env.get("PATH", "")
-            cmd = "acp job completed --json"
+            cmd = "acp job completed --json --limit 200"
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, env=env)
             
             subaccount = None
