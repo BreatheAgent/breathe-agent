@@ -111,8 +111,15 @@ class BreatheAgent:
         """Fetch total value (Clearinghouse + L1 Spot) and positions."""
         try:
             # 1. Dynamically find the latest subaccount from ACP history
+            env = os.environ.copy()
+            env["PATH"] = "/tmp:" + env.get("PATH", "")
             cmd = "acp job completed --json"
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, env=env)
+            
+            if result.returncode != 0:
+                print(f"{Colors.ERROR}[ACP Error] {result.stderr}{Colors.RESET}")
+                return {"value": 0, "positions": [], "addr": "unknown"}
+                
             jobs = json.loads(result.stdout)
             
             subaccount = None
@@ -172,6 +179,7 @@ class BreatheAgent:
             print(f"{Colors.INFO}[Debug] Address: {subaccount[:10]}... | Perp: ${perp_value:.2f} | L1: ${l1_value:.2f}{Colors.RESET}")
             return {"value": total_value, "positions": active_positions, "addr": subaccount}
         except Exception as e:
+            print(f"{Colors.ERROR}[Account State Error] {e}{Colors.RESET}")
             return {"value": 0, "positions": [], "addr": "unknown"}
 
     def display_live_status(self, state, current_mids):
