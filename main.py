@@ -139,7 +139,9 @@ class BreatheAgent:
             # 2. Fetch Clearinghouse State (Margin Account)
             resp = requests.post(url, json={"type": "clearinghouseState", "user": subaccount}, timeout=10)
             data = resp.json()
-            perp_value = float(data.get("marginSummary", {}).get("accountValue", 0))
+            perp_value = 0
+            if isinstance(data, dict):
+                perp_value = float(data.get("marginSummary", {}).get("accountValue", 0))
             
             # 3. Fetch L1 Token Balances (Spot Card / Cash)
             l1_resp = requests.post(url, json={"type": "userTokens", "user": subaccount}, timeout=10)
@@ -155,26 +157,38 @@ class BreatheAgent:
             orders_resp = requests.post(url, json={"type": "openOrders", "user": subaccount}, timeout=10)
             open_orders = orders_resp.json()
             
-            tps = {o.get('coin'): o.get('triggerPx', o.get('limitPx')) for o in open_orders if o.get('orderType') == 'Take Profit' or 'tp' in str(o).lower()}
-            sls = {o.get('coin'): o.get('triggerPx', o.get('limitPx')) for o in open_orders if o.get('orderType') == 'Stop Market' or 'sl' in str(o).lower()}
+            tps = {}
+            sls = {}
+            if isinstance(open_orders, list):
+                for o in open_orders:
+                    if isinstance(o, dict):
+                        coin = o.get('coin')
+                        if coin:
+                            if o.get('orderType') == 'Take Profit' or 'tp' in str(o).lower():
+                                tps[coin] = o.get('triggerPx', o.get('limitPx'))
+                            if o.get('orderType') == 'Stop Market' or 'sl' in str(o).lower():
+                                sls[coin] = o.get('triggerPx', o.get('limitPx'))
             
             # 5. Process Positions
             active_positions = []
-            positions = data.get("assetPositions", [])
-            for pos in positions:
-                entry = pos.get("position", {})
-                size = float(entry.get("szi", 0))
-                if abs(size) > 0:
-                    coin = entry.get("coin")
-                    active_positions.append({
-                        "coin": coin,
-                        "side": "LONG" if size > 0 else "SHORT",
-                        "size": abs(size),
-                        "entry": float(entry.get("entryPx", 0)),
-                        "leverage": float(entry.get("leverage", {}).get("value", 1)),
-                        "tp": tps.get(coin, "-"),
-                        "sl": sls.get(coin, "-")
-                    })
+            if isinstance(data, dict):
+                positions = data.get("assetPositions", [])
+                for pos in positions:
+                    if isinstance(pos, dict):
+                        entry = pos.get("position", {})
+                        if isinstance(entry, dict):
+                            size = float(entry.get("szi", 0))
+                            if abs(size) > 0:
+                                coin = entry.get("coin")
+                                active_positions.append({
+                                    "coin": coin,
+                                    "side": "LONG" if size > 0 else "SHORT",
+                                    "size": abs(size),
+                                    "entry": float(entry.get("entryPx", 0)),
+                                    "leverage": float(entry.get("leverage", {}).get("value", 1)),
+                                    "tp": tps.get(coin, "-"),
+                                    "sl": sls.get(coin, "-")
+                                })
                     
             total_value = perp_value + l1_value
             print(f"{Colors.INFO}[Debug] Address: {subaccount[:10]}... | Perp: ${perp_value:.2f} | L1: ${l1_value:.2f}{Colors.RESET}")
