@@ -36,7 +36,7 @@ class BreatheAgent:
         self.timeframe = "15m"
         self.ema_fast = 5
         self.ema_slow = 13
-        self.last_subaccount = None # Cache for persistent monitoring
+        self.last_subaccount = "0x39c4e869b344085a19e50ff1cf70d85baf64c72d" # Verified address with $20.67
         self.leverage = 10
         self.size_percent = 0.10
         self.stop_loss = 0.015
