@@ -174,7 +174,7 @@ class BreatheAgent:
                 subprocess.run(modify_cmd, shell=True, cwd=acp_cwd)
                 
                 print(f"{Colors.INFO}[Risk Mgmt] TP: {modify_req['takeProfit']} | SL: {modify_req['stopLoss']} set.{Colors.RESET}")
-                self.post_to_forum(f"Entered {side} {pair} at {price}. TP: {modify_req['takeProfit']}, SL: {modify_req['stopLoss']} - {reason}")
+                self.post_to_forum(f"Entered {side} {pair} at {price} ({leverage}x). TP: {modify_req['takeProfit']}, SL: {modify_req['stopLoss']} - {reason}")
             else:
                 print(f"{Colors.ERROR}[Trade Failure] {result.stderr}{Colors.RESET}")
         except Exception as e:
@@ -213,11 +213,13 @@ class BreatheAgent:
                         
                         # GOLDEN CROSS (Long)
                         if prev_ema9 <= prev_ema21 and ema9 > ema21:
-                            self.execute_trade("long", p, price, "EMA 9 crossed above EMA 21 (Golden Cross)")
+                            lev = self.get_dynamic_leverage("long", data)
+                            self.execute_trade("long", p, price, lev, f"EMA 9 Golden Cross | RSI: {rsi:.1f}")
                         
                         # DEATH CROSS (Short)
                         elif prev_ema9 >= prev_ema21 and ema9 < ema21:
-                            self.execute_trade("short", p, price, "EMA 9 crossed below EMA 21 (Death Cross)")
+                            lev = self.get_dynamic_leverage("short", data)
+                            self.execute_trade("short", p, price, lev, f"EMA 9 Death Cross | RSI: {rsi:.1f}")
                     
                     time.sleep(10) # Small gap between pairs
                 
