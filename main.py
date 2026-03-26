@@ -104,8 +104,8 @@ class BreatheAgent:
             print(f"{Colors.ERROR}[Market Data Error] {e}{Colors.RESET}")
             return None
 
-    def get_active_position_count(self):
-        """Count how many open positions the agent currently has."""
+    def get_account_state(self):
+        """Fetch total account value and active position count."""
         try:
             url = "https://api.hyperliquid.xyz/info"
             user_address = self.wallet.address
@@ -114,6 +114,11 @@ class BreatheAgent:
             response = requests.post(url, json=payload, timeout=10)
             data = response.json()
             
+            # 1. Total Account Value (USD)
+            summary = data.get("marginSummary", {})
+            account_value = float(summary.get("accountValue", 0))
+            
+            # 2. Active Position Count
             count = 0
             positions = data.get("assetPositions", [])
             for pos in positions:
@@ -121,9 +126,10 @@ class BreatheAgent:
                 size = float(entry.get("s", 0))
                 if abs(size) > 0:
                     count += 1
-            return count
+                    
+            return {"value": account_value, "count": count}
         except:
-            return 99 # Safety: if API fails, don't open new trades
+            return {"value": 0, "count": 99}
 
     def calculate_ema(self, prices, period):
         """Calculate EMA for a given period."""
@@ -246,19 +252,23 @@ class BreatheAgent:
                         
                         print(f"\r{Colors.INFO}[Poll] {p}: {price:.2f} | EMA9: {ema9:.2f} | EMA21: {ema21:.2f}{Colors.RESET}       ", end="", flush=True)
                         
-                        # Position Guard: Max 2 concurrent trades for 20 USDC safety
-                        active_count = self.get_active_position_count()
-                        is_at_limit = active_count >= 2
+                        # Dynamic Scaling: Max Positions = floor(Account Value / 9 USDC margin)
+                        state = self.get_account_state()
+                        acc_value = state['value']
+                        active_count = state['count']
+                        
+                        max_positions = max(1, int(acc_value // 9)) # At least 1 if we have money
+                        is_at_limit = active_count >= max_positions
                         
                         # GOLDEN CROSS (Long)
                         if not is_at_limit and prev_ema9 <= prev_ema21 and ema9 > ema21:
                             lev = self.get_dynamic_leverage("long", data)
-                            self.execute_trade("long", p, price, lev, f"EMA 9 Golden Cross | RSI: {rsi:.1f}")
+                            self.execute_trade("long", p, price, lev, f"EMA 9 Golden Cross | RSI: {rsi:.1f} | Cap: {active_count}/{max_positions}")
                         
                         # DEATH CROSS (Short)
                         elif not is_at_limit and prev_ema9 >= prev_ema21 and ema9 < ema21:
                             lev = self.get_dynamic_leverage("short", data)
-                            self.execute_trade("short", p, price, lev, f"EMA 9 Death Cross | RSI: {rsi:.1f}")
+                            self.execute_trade("short", p, price, lev, f"EMA 9 Death Cross | RSI: {rsi:.1f} | Cap: {active_count}/{max_positions}")
                     
                     time.sleep(10) # Small gap between pairs
                 
