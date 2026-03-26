@@ -130,9 +130,23 @@ class BreatheAgent:
         rs = avg_gain / avg_loss
         return 100 - (100 / (1 + rs))
 
-    def execute_trade(self, side, pair, price, reason):
-        """Send trade command and set TP/SL via ACP."""
-        print(f"\n{Colors.WARNING}[Trading] Executing {side} on {pair} at {price}...{Colors.RESET}")
+    def get_dynamic_leverage(self, side, data):
+        """Determine leverage (3x, 5x, 10x) based on RSI and trend strength."""
+        rsi = data.get('rsi', 50)
+        
+        # High Confidence (10x): Trend is fresh and RSI supports it
+        if side == "long" and rsi < 45: return 10
+        if side == "short" and rsi > 55: return 10
+        
+        # Moderate Confidence (7x): Standard cross
+        if 40 < rsi < 60: return 7
+        
+        # High Risk / Volatile (3x): RSI is near extremes or trend is extended
+        return 3
+
+    def execute_trade(self, side, pair, price, leverage, reason):
+        """Send trade command with dynamic leverage and set TP/SL."""
+        print(f"\n{Colors.WARNING}[Trading] Executing {side} on {pair} at {price} ({leverage}x)...{Colors.RESET}")
         
         if side == "long":
             tp_price = price * 1.03
@@ -141,15 +155,15 @@ class BreatheAgent:
             tp_price = price * 0.97
             sl_price = price * 1.015
             
-        size_usdc = 9 
+        size_usdc = 10 
         
         # 1. Open Position
         trade_req = {
             "action": "open",
             "pair": pair,
             "side": side,
-            "size": str(size_usdc * self.leverage),
-            "leverage": self.leverage
+            "size": str(size_usdc * leverage),
+            "leverage": leverage
         }
         
         # 2. Set TP/SL (Modify Job)
