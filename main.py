@@ -104,6 +104,28 @@ class BreatheAgent:
             print(f"{Colors.ERROR}[Market Data Error] {e}{Colors.RESET}")
             return None
 
+    def has_active_position(self):
+        """Check if the agent already has an open position on Hyperliquid."""
+        try:
+            url = "https://api.hyperliquid.xyz/info"
+            # We use the subaccount/wallet address to check position state
+            user_address = self.wallet.address
+            payload = {"type": "clearinghouseState", "user": user_address}
+            
+            response = requests.post(url, json=payload, timeout=10)
+            data = response.json()
+            
+            positions = data.get("assetPositions", [])
+            for pos in positions:
+                entry = pos.get("position", {})
+                size = float(entry.get("s", 0))
+                if abs(size) > 0:
+                    return True
+            return False
+        except Exception as e:
+            # If API fails, assume we stay safe and don't double trade
+            return True 
+
     def calculate_ema(self, prices, period):
         """Calculate EMA for a given period."""
         if not prices: return 0
@@ -225,13 +247,16 @@ class BreatheAgent:
                         
                         print(f"\r{Colors.INFO}[Poll] {p}: {price:.2f} | EMA9: {ema9:.2f} | EMA21: {ema21:.2f}{Colors.RESET}       ", end="", flush=True)
                         
+                        # Position Guard: Don't open new if one is active
+                        is_busy = self.has_active_position()
+                        
                         # GOLDEN CROSS (Long)
-                        if prev_ema9 <= prev_ema21 and ema9 > ema21:
+                        if not is_busy and prev_ema9 <= prev_ema21 and ema9 > ema21:
                             lev = self.get_dynamic_leverage("long", data)
                             self.execute_trade("long", p, price, lev, f"EMA 9 Golden Cross | RSI: {rsi:.1f}")
                         
                         # DEATH CROSS (Short)
-                        elif prev_ema9 >= prev_ema21 and ema9 < ema21:
+                        elif not is_busy and prev_ema9 >= prev_ema21 and ema9 < ema21:
                             lev = self.get_dynamic_leverage("short", data)
                             self.execute_trade("short", p, price, lev, f"EMA 9 Death Cross | RSI: {rsi:.1f}")
                     
