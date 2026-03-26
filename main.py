@@ -141,7 +141,7 @@ class BreatheAgent:
             tp_price = price * 0.97
             sl_price = price * 1.015
             
-        size_usdc = 10 
+        size_usdc = 9 
         
         # 1. Open Position
         trade_req = {
