@@ -139,37 +139,49 @@ class BreatheAgent:
             url = "https://api.hyperliquid.xyz/info"
             
             # 2. Fetch Clearinghouse State (Margin Account)
-            resp = requests.post(url, json={"type": "clearinghouseState", "user": subaccount}, timeout=10)
-            data = resp.json()
             perp_value = 0
-            if isinstance(data, dict):
-                perp_value = float(data.get("marginSummary", {}).get("accountValue", 0))
+            data = {}
+            try:
+                resp = requests.post(url, json={"type": "clearinghouseState", "user": subaccount}, timeout=10)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if isinstance(data, dict):
+                        perp_value = float(data.get("marginSummary", {}).get("accountValue", 0))
+            except Exception as e:
+                pass
             
             # 3. Fetch L1 Token Balances (Spot Card / Cash)
-            l1_resp = requests.post(url, json={"type": "userTokens", "user": subaccount}, timeout=10)
-            l1_data = l1_resp.json()
             l1_value = 0
-            if isinstance(l1_data, list):
-                for token in l1_data:
-                    if isinstance(token, dict) and token.get('token') == 'USDC':
-                        l1_value = float(token.get('totalBalance', 0))
-                        break
+            try:
+                l1_resp = requests.post(url, json={"type": "userTokens", "user": subaccount}, timeout=10)
+                if l1_resp.status_code == 200:
+                    l1_data = l1_resp.json()
+                    if isinstance(l1_data, list):
+                        for token in l1_data:
+                            if isinstance(token, dict) and token.get('token') == 'USDC':
+                                l1_value = float(token.get('totalBalance', 0))
+                                break
+            except Exception as e:
+                pass
             
             # 4. Fetch Open Orders (TP/SL)
-            orders_resp = requests.post(url, json={"type": "openOrders", "user": subaccount}, timeout=10)
-            open_orders = orders_resp.json()
-            
             tps = {}
             sls = {}
-            if isinstance(open_orders, list):
-                for o in open_orders:
-                    if isinstance(o, dict):
-                        coin = o.get('coin')
-                        if coin:
-                            if o.get('orderType') == 'Take Profit' or 'tp' in str(o).lower():
-                                tps[coin] = o.get('triggerPx', o.get('limitPx'))
-                            if o.get('orderType') == 'Stop Market' or 'sl' in str(o).lower():
-                                sls[coin] = o.get('triggerPx', o.get('limitPx'))
+            try:
+                orders_resp = requests.post(url, json={"type": "openOrders", "user": subaccount}, timeout=10)
+                if orders_resp.status_code == 200:
+                    open_orders = orders_resp.json()
+                    if isinstance(open_orders, list):
+                        for o in open_orders:
+                            if isinstance(o, dict):
+                                coin = o.get('coin')
+                                if coin:
+                                    if o.get('orderType') == 'Take Profit' or 'tp' in str(o).lower():
+                                        tps[coin] = o.get('triggerPx', o.get('limitPx'))
+                                    if o.get('orderType') == 'Stop Market' or 'sl' in str(o).lower():
+                                        sls[coin] = o.get('triggerPx', o.get('limitPx'))
+            except Exception as e:
+                pass
             
             # 5. Process Positions
             active_positions = []
@@ -196,7 +208,7 @@ class BreatheAgent:
             print(f"{Colors.INFO}[Debug] Address: {subaccount[:10]}... | Perp: ${perp_value:.2f} | L1: ${l1_value:.2f}{Colors.RESET}")
             return {"value": total_value, "positions": active_positions, "addr": subaccount}
         except Exception as e:
-            print(f"{Colors.ERROR}[Account State Error] {e}{Colors.RESET}")
+            print(f"{Colors.ERROR}[Account State Critical Error] {e}{Colors.RESET}")
             return {"value": 0, "positions": [], "addr": "unknown"}
 
     def display_live_status(self, state, current_mids):
