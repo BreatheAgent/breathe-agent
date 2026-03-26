@@ -271,20 +271,22 @@ class BreatheAgent:
             
         size_usdc = 9 
         
-        # 1. Open Position
+        # 1. Open Position (Try to include TP/SL in open if supported)
         trade_req = {
             "action": "open",
             "pair": pair,
             "side": side,
             "size": str(size_usdc * leverage),
-            "leverage": leverage
+            "leverage": leverage,
+            "takeProfit": f"{tp_price:.6f}",
+            "stopLoss": f"{sl_price:.6f}"
         }
         
-        # 2. Set TP/SL (Modify Job)
+        # 2. Set TP/SL (Separate Modify Job as backup)
         modify_req = {
             "pair": pair,
-            "takeProfit": str(int(tp_price)),
-            "stopLoss": str(int(sl_price))
+            "takeProfit": f"{tp_price:.6f}",
+            "stopLoss": f"{sl_price:.6f}"
         }
 
         acp_cwd = os.getenv("ACP_CWD", "./acp")
